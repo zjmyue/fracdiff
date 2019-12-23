@@ -60,7 +60,8 @@ statfracdiff.order_
 # 0.23
 ```
 
-Differentiated time-series with this order is obtained by subsequently applying `transform` method. This series is interpreted as the stationary time-series keeping the maximum memory of the original time-series.
+Differentiated time-series with this order is obtained by subsequently applying `transform` method.
+This series is interpreted as the stationary time-series keeping the maximum memory of the original time-series.
 
 ```python
 nky_diff = statfracdiff.transform(nky)  # same with FracDiff(0.23).transform(nky)
@@ -76,6 +77,10 @@ The result looks like this:
 
 ![nky](./sample/nky.png)
 
+Other examples including those in [M. L. Prado's book][prado] can be found in a Jupyter notebook [here](./sample/plot.ipynb).
+
 ## References
 
-- Marcos Lopez de Prado, "Advances in Financial Machine Learning", Wiley, (2018).
+- [Marcos Lopez de Prado, "Advances in Financial Machine Learning", Wiley, (2018).][prado]
+
+[prado]: https://www.wiley.com/en-us/Advances+in+Financial+Machine+Learning-p-9781119482086
