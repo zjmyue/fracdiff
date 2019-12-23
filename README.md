@@ -40,7 +40,7 @@ spx_diff = fracdiff.transform(spx)
 spx_diff
 ```
 
-The result looks like this (same with the one at the top):
+The result looks like this:
 
 ![spx](./sample/spx.png)
 
