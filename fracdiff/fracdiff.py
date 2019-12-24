@@ -26,17 +26,17 @@ class FracDiff(TransformerMixin):
     def __check_order(order):
         """Check if the given value of order is sane"""
         if not (isinstance(order, float) or isinstance(order, int)):
-            raise TypeError('Parameter "order" must be float.')
-        if not 0 <= order <= 1:
-            raise ValueError(f'Parameter "order" must be 0-1, but {order} was given.')
+            raise TypeError('order must be int or float.')
+        if order < 0:
+            raise ValueError(f'order must be positive; {order} was given.')
 
     @staticmethod
     def __check_window(window):
         """Check if the given value of window is sane"""
         if not isinstance(window, int):
-            raise TypeError('Parameter "window" must be integer.')
+            raise TypeError('window must be int.')
         if not (window == -1 or window > 0):
-            raise ValueError('Parameter "window" must be -1 or positive integer.')
+            raise ValueError('window must be -1 or positive integer.')
 
     def __init__(self, order, window=100):
         """Initialize self."""
