@@ -27,7 +27,7 @@ $ pip install fracdiff
 
 ### Fractional differentiation
 
-The transformer object `FracDiff` generates fractional differentiation by its method `transform`.
+A transformer class `FracDiff` generates fractional differentiation by its method `transform`.
 The following example gives 0.5th differentiation of S&P 500.
 
 ```python
@@ -37,6 +37,7 @@ spx = ...  # Fetch 1d array of S&P 500 historical price
 
 fracdiff = FracDiff(0.5)
 spx_diff = fracdiff.transform(spx)
+
 spx_diff
 ```
 
@@ -46,7 +47,7 @@ The result looks like this:
 
 ### Differentiation while preserving memory
 
-The transformer object `StationaryFracDiff` finds the minumum order of fractional differentiation that makes time-series stationary.
+A transformer class `StationaryFracDiff` finds the minumum order of fractional differentiation that makes time-series stationary.
 
 ```python
 from fracdiff import StationaryFracDiff
