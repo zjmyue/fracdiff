@@ -80,7 +80,7 @@ The result looks like this:
 
 Other examples including those in [M. L. Prado's book][prado] can be found in a Jupyter notebook [here](./sample/plot.ipynb).
 
-Example solutions of exercises in Section 5 of M. L. Prado's book is provided [here][solution].
+Example solutions of exercises in Section 5 of M. L. Prado's book are provided [here][solution].
 
 ## References
 
