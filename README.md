@@ -80,8 +80,11 @@ The result looks like this:
 
 Other examples including those in [M. L. Prado's book][prado] can be found in a Jupyter notebook [here](./sample/plot.ipynb).
 
+Example solutions of exercises in Section 5 of M. L. Prado's book is provided [here][solution].
+
 ## References
 
 - [Marcos Lopez de Prado, "Advances in Financial Machine Learning", Wiley, (2018).][prado]
 
 [prado]: https://www.wiley.com/en-us/Advances+in+Financial+Machine+Learning-p-9781119482086
+[solution]: https://nbviewer.jupyter.org/gist/simaki/45e805b5e75c389ca5e1928edda0b0a1
