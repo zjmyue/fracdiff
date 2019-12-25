@@ -17,7 +17,7 @@ description = """Fractional differentiation of time-series."""
 
 setup(
     name='fracdiff',
-    version='0.0.1',
+    version='0.0.2',
     description=description,
     long_description=description,
     long_description_content_type='text/markdown',

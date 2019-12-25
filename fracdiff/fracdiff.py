@@ -27,8 +27,6 @@ class FracDiff(TransformerMixin):
         """Check if the given value of order is sane"""
         if not (isinstance(order, float) or isinstance(order, int)):
             raise TypeError('order must be int or float.')
-        if order < 0:
-            raise ValueError(f'order must be positive; {order} was given.')
 
     @staticmethod
     def __check_window(window):
