@@ -1,15 +1,17 @@
-from sklearn.base import TransformerMixin
+from sklearn.base import BaseEstimator, TransformerMixin
+from sklearn.utils.validation import check_array, check_is_fitted
 from statsmodels.tsa.stattools import adfuller
 import numpy as np
 
+from sklearn.utils.estimator_checks import check_estimator
 
-class FracDiff(TransformerMixin):
+class Fracdiff(BaseEstimator, TransformerMixin):
     """
     Carry out fractional differentiation.
 
     Parameters
     ----------
-    - order : float
+    - order : float, default 1.0
         Order of differentiation.  Must be 0-1
     - window : positive int or -1, default 10
         Window to compute differentiation.
@@ -22,26 +24,8 @@ class FracDiff(TransformerMixin):
     >>> X_d = fracdiff.transform(X)
     >>> X_d
     """
-    @staticmethod
-    def __check_order(order):
-        """Check if the given value of order is sane"""
-        if not (isinstance(order, float) or isinstance(order, int)):
-            raise TypeError('order must be int or float.')
-
-    @staticmethod
-    def __check_window(window):
-        """Check if the given value of window is sane"""
-        if not isinstance(window, int):
-            raise TypeError('window must be int.')
-        if not (window == -1 or window > 0):
-            raise ValueError('window must be -1 or positive integer.')
-
-    def __init__(self, order, window=100):
+    def __init__(self, order=1.0, window=10):
         """Initialize self."""
-        # TODO default window = 100 sensible?
-        self.__class__.__check_order(order)
-        self.__class__.__check_window(window)
-
         self.order = order
         self.window = window
 
@@ -55,9 +39,35 @@ class FracDiff(TransformerMixin):
         return np.array(list(omega(order, window)))[::-1]
 
     def fit(self, X, y=None):
+        """
+        Parameters
+        ----------
+        - X : array-like, shape (n_samples, n_features)
+            Time-series to differentiate.
+        - y : None
+            Ignored.
+
+        Returns
+        -------
+        self
+        """
+        X = check_array(X)
+        self.n_features_ = X.shape[1]
         return self
 
-    def transform(self, X, y=None):
+    def __check_order(self):
+        """Check if the value of order is sane"""
+        if not (isinstance(self.order, float) or isinstance(self.order, int)):
+            raise TypeError('order must be int or float.')
+
+    def __check_window(self):
+        """Check if the value of window is sane"""
+        if not isinstance(self.window, int):
+            raise TypeError('window must be int.')
+        if not (self.window == -1 or self.window > 0):
+            raise ValueError('window must be -1 or positive integer.')
+
+    def transform(self, X):
         """
         Perform fractional differentiation on array.
 
@@ -65,14 +75,20 @@ class FracDiff(TransformerMixin):
         ----------
         - X : array-like, shape (n_samples, )
             Time-series to differentiate.
-        - y : None
-            Ignored.
 
         Returns
         -------
-        - X_d : array-like, shape (n_samples, )
+        - X_differentiated : array-like, shape (n_samples, )
             Differentiated time-series.
         """
+        # self.__check_order()
+        # self.__check_window()
+        check_is_fitted(self, 'n_features_')
+        X = check_array(X, estimator=self)
+        if X.shape[1] != self.n_features_:
+            raise ValueError('Shape of input is different from what was seen'
+                             'in `fit`')
+
         __max_window = 100  # TODO TBD
         n_samples = X.shape[0]
         window = self.window if self.window != -1 else __max_window
@@ -155,7 +171,7 @@ class StationarityTester:
             return self.score(X) < pvalue
 
 
-class StationaryFracDiff(TransformerMixin):
+class StationaryFracdiff(TransformerMixin):
     """
     Carry out fractional derivative with the minumum order
     with which the differentiation becomes stationary.
@@ -177,8 +193,8 @@ class StationaryFracDiff(TransformerMixin):
     - order_ : float
         Minimum order of fractional differentiation
         that makes time-series stationary.
-    - fracdiff_ : FracDiff
-        FracDiff object.
+    - fracdiff_ : Fracdiff
+        Fracdiff object.
     """
     def __init__(self,
                  stationarity_test='ADF',
@@ -197,16 +213,16 @@ class StationaryFracDiff(TransformerMixin):
         """
         tester = self.tester
 
-        X_u = FracDiff(upper, window=self.window).transform(X)[self.window:]
+        X_u = Fracdiff(upper, window=self.window).transform(X)[self.window:]
         if not tester.is_stationary(X_u, pvalue=self.pvalue):
             return np.nan
-        X_l = FracDiff(lower, window=self.window).transform(X)[self.window:]
+        X_l = Fracdiff(lower, window=self.window).transform(X)[self.window:]
         if tester.is_stationary(X_l, pvalue=self.pvalue):
             return lower
 
         while upper - lower > self.precision:
             m = (upper + lower) / 2
-            X_m = FracDiff(m, window=self.window).transform(X)[self.window:]
+            X_m = Fracdiff(m, window=self.window).transform(X)[self.window:]
             if tester.is_stationary(X_m, pvalue=self.pvalue):
                 upper = m
             else:
@@ -215,8 +231,12 @@ class StationaryFracDiff(TransformerMixin):
 
     def fit(self, X, y=None):
         self.order_ = self.__binary_search_order(X, lower=0.0, upper=1.0)
-        self.fracdiff_ = FracDiff(self.order_, self.window)
+        self.fracdiff_ = Fracdiff(self.order_, self.window)
         return self
 
     def transform(self, X, y=None):
         return self.fracdiff_.transform(X, y)
+
+
+check_estimator(Fracdiff)
+check_estimator(StationaryFracdiff)
