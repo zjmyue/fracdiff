@@ -1,16 +1,18 @@
 from sklearn.base import TransformerMixin
-from statsmodels.tsa.stattools import adfuller
+from sklearn.utils.validation import check_array
 import numpy as np
 
+from ._stat import StationarityTester
 
-class FracDiff(TransformerMixin):
+
+class Fracdiff:
     """
     Carry out fractional differentiation.
 
     Parameters
     ----------
-    - order : float
-        Order of differentiation.  Must be 0-1
+    - order : float, default 1.0
+        Order of differentiation.
     - window : positive int or -1, default 10
         Window to compute differentiation.
         If -1, ...
@@ -18,30 +20,18 @@ class FracDiff(TransformerMixin):
     Examples
     --------
     >>> fracdiff = Fracdiff(order=0.5)
-    >>> X = np.array([...])
-    >>> X_d = fracdiff.transform(X)
-    >>> X_d
+    >>> X = np.array([1., 0., 0., 0., 0., 0.]).reshape(-1, 1)
+    >>> Xd = fracdiff.transform(X)
+    >>> Xd
+    array([[ 1.        ],
+           [-0.5       ],
+           [-0.125     ],
+           [-0.0625    ],
+           [-0.0390625 ],
+           [-0.02734375]])
     """
-    @staticmethod
-    def __check_order(order):
-        """Check if the given value of order is sane"""
-        if not (isinstance(order, float) or isinstance(order, int)):
-            raise TypeError('order must be int or float.')
-
-    @staticmethod
-    def __check_window(window):
-        """Check if the given value of window is sane"""
-        if not isinstance(window, int):
-            raise TypeError('window must be int.')
-        if not (window == -1 or window > 0):
-            raise ValueError('window must be -1 or positive integer.')
-
-    def __init__(self, order, window=100):
+    def __init__(self, order=1.0, window=10):
         """Initialize self."""
-        # TODO default window = 100 sensible?
-        self.__class__.__check_order(order)
-        self.__class__.__check_window(window)
-
         self.order = order
         self.window = window
 
@@ -57,7 +47,19 @@ class FracDiff(TransformerMixin):
     def fit(self, X, y=None):
         return self
 
-    def transform(self, X, y=None):
+    def __check_order(self):
+        """Check if the value of order is sane"""
+        if not (isinstance(self.order, float) or isinstance(self.order, int)):
+            raise TypeError('order must be int or float.')
+
+    def __check_window(self):
+        """Check if the value of window is sane"""
+        if not isinstance(self.window, int):
+            raise TypeError('window must be int.')
+        if not (self.window == -1 or self.window > 0):
+            raise ValueError('window must be -1 or positive integer.')
+
+    def transform(self, X):
         """
         Perform fractional differentiation on array.
 
@@ -65,16 +67,24 @@ class FracDiff(TransformerMixin):
         ----------
         - X : array-like, shape (n_samples, )
             Time-series to differentiate.
-        - y : None
-            Ignored.
 
         Returns
         -------
         - X_d : array-like, shape (n_samples, )
             Differentiated time-series.
         """
+        self.__check_order()
+        self.__check_window()
+        X = check_array(X, estimator=self)
+
+        n_samples, n_features = X.shape
+        if n_features > 1:
+            return np.hstack([
+                self.transform(X[:, :1]),
+                self.transform(X[:, 1:]),
+            ])
+
         __max_window = 100  # TODO TBD
-        n_samples = X.shape[0]
         window = self.window if self.window != -1 else __max_window
 
         coeff = self.__class__.__coeff(self.order, window)
@@ -92,70 +102,7 @@ class FracDiff(TransformerMixin):
         return X_d
 
 
-class StationarityTester:
-    """
-    Carry out stationarity test of time-series.
-
-    Parameters
-    ----------
-    - method : {'ADF'}, default 'ADF'
-        'ADF' : Augmented Dickey-Fuller unit-root test.
-    """
-    @staticmethod
-    def __check_method(method):
-        if method not in ('ADF', ):
-            raise ValueError(f'Invalid method: {method}')
-
-    def __init__(self, method='ADF'):
-        self.__class__.__check_method(method)
-        self.method = method
-
-    def score(self, X, y=None, value='pvalue'):
-        """
-        Return p-value of stationarity test.
-
-        Parameters
-        ----------
-        - X : array-like, shape (n_samples, )
-            Time-series to score p-value.
-        - y : None
-            Ignored.
-        - value : {'pvalue', 'statistics', 'all'}, default 'pvalue'
-            'pvalue' : p-value.
-            'statistics' : statistics of unit-root test.
-            'all' : All return values from statsmodels.
-
-        Returns
-        -------
-        pvalue : float
-            p-value of stationarity test.
-        """
-        if self.method == 'ADF':
-            if value == 'pvalue':
-                _, pvalue, _, _, _, _ = adfuller(X)
-                return pvalue
-            if value == 'statistics':
-                statistics, _, _, _, _, _ = adfuller(X)
-                return statistics
-            if value == 'all':
-                return adfuller(X)
-            raise ValueError()
-
-    def is_stationary(self, X, y=None, pvalue=.05):
-        """
-        Return if stationarity test implies stationarity.
-
-        Returns
-        -------
-        is_stationary : bool
-            True means that the null hypothes that a unit-root is present
-            has been rejected.
-        """
-        if self.method == 'ADF':
-            return self.score(X) < pvalue
-
-
-class StationaryFracDiff(TransformerMixin):
+class StationaryFracdiff(TransformerMixin):
     """
     Carry out fractional derivative with the minumum order
     with which the differentiation becomes stationary.
@@ -174,49 +121,72 @@ class StationaryFracDiff(TransformerMixin):
 
     Attributes
     ----------
-    - order_ : float
+    - order_ : array-like, shape (n_features, )
         Minimum order of fractional differentiation
         that makes time-series stationary.
-    - fracdiff_ : FracDiff
-        FracDiff object.
+    - fracdiff_ : Fracdiff
+        Fracdiff object.
     """
     def __init__(self,
-                 stationarity_test='ADF',
+                 stat_method='ADF',
                  pvalue=.05,
                  precision=.01,
-                 window=3):
-        self.tester = StationarityTester(method=stationarity_test)
+                 upper=1.0,
+                 lower=0.0,
+                 window=10):
+        self.stat_method = stat_method
         self.pvalue = pvalue
         self.precision = precision
+        self.upper = upper
+        self.lower = lower
         self.window = window
 
-    def __binary_search_order(self, X, lower, upper):
+    def __search_order(self, X):
         """
         Carry out binary search of minimum order of fractional
         differentiation to make the time-series stationary.
+
+        Parameters
+        ----------
+        X : array-like, shape (n_samples, )
         """
-        tester = self.tester
+        _, n_features = X.shape
+        if n_features > 1:
+            return np.hstack([
+                self.__search_order(X[:, :1]),
+                self.__search_order(X[:, 1:]),
+            ])
 
-        X_u = FracDiff(upper, window=self.window).transform(X)[self.window:]
-        if not tester.is_stationary(X_u, pvalue=self.pvalue):
-            return np.nan
-        X_l = FracDiff(lower, window=self.window).transform(X)[self.window:]
-        if tester.is_stationary(X_l, pvalue=self.pvalue):
-            return lower
+        tester = StationarityTester(method=self.stat_method)
 
+        Xu = Fracdiff(self.upper, window=self.window).transform(X)
+        if not tester.is_stationary(Xu[self.window:, 0], pvalue=self.pvalue):
+            return np.array([np.nan])
+        Xl = Fracdiff(self.lower, window=self.window).transform(X)
+        if tester.is_stationary(Xl[self.window:, 0], pvalue=self.pvalue):
+            return np.array([self.lower])
+
+        upper, lower = self.upper, self.lower
         while upper - lower > self.precision:
             m = (upper + lower) / 2
-            X_m = FracDiff(m, window=self.window).transform(X)[self.window:]
-            if tester.is_stationary(X_m, pvalue=self.pvalue):
+            Xm = Fracdiff(m, window=self.window).transform(X)
+            if tester.is_stationary(Xm[self.window:, 0], pvalue=self.pvalue):
                 upper = m
             else:
                 lower = m
-        return upper
+        return np.array([upper])
 
     def fit(self, X, y=None):
-        self.order_ = self.__binary_search_order(X, lower=0.0, upper=1.0)
-        self.fracdiff_ = FracDiff(self.order_, self.window)
+        self.order_ = self.__search_order(X)
         return self
 
     def transform(self, X, y=None):
-        return self.fracdiff_.transform(X, y)
+        _, n_features = X.shape
+
+        return np.hstack([
+            (
+                Fracdiff(self.order_[i], window=self.window)
+                .transform(X[:, i].reshape(-1, 1))
+            )
+            for i in range(n_features)
+        ])

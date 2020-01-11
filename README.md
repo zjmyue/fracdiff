@@ -2,11 +2,11 @@
 
 [![version](https://img.shields.io/pypi/v/fracdiff.svg)](https://pypi.org/project/fracdiff/)
 [![Build Status](https://travis-ci.com/simaki/fracdiff.svg?branch=master)](https://travis-ci.com/simaki/fracdiff)
-[![LICENSE](https://img.shields.io/github/license/simaki/fracdiff)](https://github.com/simaki/fracdiff/blob/master/LICENSE)
+[![LICENSE](https://img.shields.io/github/license/simaki/fracdiff)](LICENSE)
 
 Fractional differentiation of time-series.
 
-![spx](./sample/spx.png)
+![spx](./sample/howto/spx.png)
 
 ## Installation
 
@@ -21,17 +21,17 @@ $ pip install fracdiff
 
 ## What is fractional differentiation?
 
-...
+See [M. L. Prado's book][prado].
 
 ## How to use
 
 ### Fractional differentiation
 
-A transformer class `FracDiff` generates fractional differentiation by its method `transform`.
+A transformer class `Fracdiff` generates fractional differentiation by its method `transform`.
 The following example gives 0.5th differentiation of S&P 500.
 
 ```python
-from fracdiff import FracDiff
+from fracdiff import Fracdiff
 
 spx = ...  # Fetch 1d array of S&P 500 historical price
 
@@ -43,18 +43,18 @@ spx_diff
 
 The result looks like this:
 
-![spx](./sample/spx.png)
+![spx](./sample/howto/spx.png)
 
 ### Differentiation while preserving memory
 
-A transformer class `StationaryFracDiff` finds the minumum order of fractional differentiation that makes time-series stationary.
+A transformer class `StationaryFracdiff` finds the minumum order of fractional differentiation that makes time-series stationary.
 
 ```python
-from fracdiff import StationaryFracDiff
+from fracdiff import StationaryFracdiff
 
 nky = ...  # Fetch 1d array of Nikkei 225 historical price
 
-statfracdiff = StationaryFracDiff()
+statfracdiff = StationaryFracdiff()
 statfracdiff.fit(nky)
 
 statfracdiff.order_
@@ -65,7 +65,7 @@ Differentiated time-series with this order is obtained by subsequently applying 
 This series is interpreted as the stationary time-series keeping the maximum memory of the original time-series.
 
 ```python
-nky_diff = statfracdiff.transform(nky)  # same with FracDiff(0.23).transform(nky)
+nky_diff = statfracdiff.transform(nky)  # same with Fracdiff(0.23).transform(nky)
 ```
 
 The method `fit_transform` carries out `fit` and `transform` at once.
@@ -76,9 +76,9 @@ nky_diff = statfracdiff.fit_transform(nky)
 
 The result looks like this:
 
-![nky](./sample/nky.png)
+![nky](./sample/howto/nky.png)
 
-Other examples including those in [M. L. Prado's book][prado] can be found in a Jupyter notebook [here](./sample/plot.ipynb).
+Other examples including those in [M. L. Prado's book][prado] can be found in a Jupyter notebook [here](./sample/examples/examples.ipynb).
 
 Example solutions of exercises in Section 5 of M. L. Prado's book are provided [here][solution].
 
