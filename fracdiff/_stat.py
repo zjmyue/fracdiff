@@ -1,5 +1,6 @@
 from statsmodels.tsa.stattools import adfuller
 
+
 class StationarityTester:
     """
     Carry out stationarity test of time-series.
@@ -18,7 +19,7 @@ class StationarityTester:
         self.__class__.__check_method(method)
         self.method = method
 
-    def pvalue(self, X, y=None, value='pvalue'):
+    def pvalue(self, x, value='pvalue'):
         """
         Return p-value of stationarity test.
 
@@ -26,8 +27,6 @@ class StationarityTester:
         ----------
         - X : array-like, shape (n_samples, )
             Time-series to score p-value.
-        - y : None
-            Ignored.
         - value : {'pvalue', 'statistics', 'all'}, default 'pvalue'
             'pvalue' : p-value.
             'statistics' : statistics of unit-root test.
@@ -40,16 +39,16 @@ class StationarityTester:
         """
         if self.method == 'ADF':
             if value == 'pvalue':
-                _, pvalue, _, _, _, _ = adfuller(X)
+                _, pvalue, _, _, _, _ = adfuller(x)
                 return pvalue
             if value == 'statistics':
-                statistics, _, _, _, _, _ = adfuller(X)
+                statistics, _, _, _, _, _ = adfuller(x)
                 return statistics
             if value == 'all':
                 return adfuller(X)
             raise ValueError()
 
-    def is_stationary(self, X, y=None, pvalue=.05):
+    def is_stationary(self, x, y=None, pvalue=.05):
         """
         Return if stationarity test implies stationarity.
 
@@ -60,6 +59,4 @@ class StationarityTester:
             has been rejected.
         """
         if self.method == 'ADF':
-            return self.score(X) < pvalue
-
-
+            return self.pvalue(x) < pvalue
