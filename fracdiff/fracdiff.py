@@ -1,8 +1,9 @@
-from sklearn.base import BaseEstimator, TransformerMixin
-from sklearn.utils.validation import check_array, check_is_fitted
+from sklearn.base import TransformerMixin
+from sklearn.utils.validation import check_array
 import numpy as np
 
 from ._stat import StationarityTester
+
 
 class Fracdiff:
     """
@@ -163,7 +164,7 @@ class StationaryFracdiff(TransformerMixin):
             return np.array([np.nan])
         Xl = Fracdiff(self.lower, window=self.window).transform(X)
         if tester.is_stationary(Xl[self.window:, 0], pvalue=self.pvalue):
-            return np.array([lower])
+            return np.array([self.lower])
 
         upper, lower = self.upper, self.lower
         while upper - lower > self.precision:
@@ -183,6 +184,9 @@ class StationaryFracdiff(TransformerMixin):
         _, n_features = X.shape
 
         return np.hstack([
-            Fracdiff(self.order_[i], window=self.window).transform(X[:, i].reshape(-1, 1))
+            (
+                Fracdiff(self.order_[i], window=self.window)
+                .transform(X[:, i].reshape(-1, 1))
+            )
             for i in range(n_features)
         ])

@@ -45,7 +45,7 @@ class StationarityTester:
                 statistics, _, _, _, _, _ = adfuller(x)
                 return statistics
             if value == 'all':
-                return adfuller(X)
+                return adfuller(x)
             raise ValueError()
 
     def is_stationary(self, x, y=None, pvalue=.05):
