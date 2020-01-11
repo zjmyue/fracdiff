@@ -78,9 +78,9 @@ The result looks like this:
 
 ![nky](./sample/howto/nky.png)
 
-Other examples including those in [M. L. Prado's book][prado] can be found in a Jupyter notebook [here](./sample/examples/examples.ipynb).
+Other examples including those in [M. L. Prado's book][prado] can be found in a Jupyter notebook [here](sample/examples/examples.ipynb).
 
-Example solutions of exercises in Section 5 of M. L. Prado's book are provided [here][solution].
+Example solutions of exercises in M. L. Prado's book are provided [here](sample/exercise/exercise.ipynb).
 
 ## References
 
