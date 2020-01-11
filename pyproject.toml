@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "fracdiff"
-version = "0.1.0"
+version = "0.0.3"
 description = "Fractional differentiation of time-series."
 authors = ["Shota Imaki <shota.imaki@icloud.com>"]
 license = "BSD-3-Clause"
