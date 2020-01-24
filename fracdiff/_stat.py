@@ -26,7 +26,7 @@ class StationarityTester:
 
     @property
     def null_hypothesis(self):
-        if method == 'ADF':
+        if self.method == 'ADF':
             return 'unit-root'
         raise ValueError(f'Invalid method: {method}')
 
