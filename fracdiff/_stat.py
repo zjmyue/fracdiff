@@ -9,54 +9,63 @@ class StationarityTester:
     ----------
     - method : {'ADF'}, default 'ADF'
         'ADF' : Augmented Dickey-Fuller unit-root test.
-    """
-    @staticmethod
-    def __check_method(method):
-        if method not in ('ADF', ):
-            raise ValueError(f'Invalid method: {method}')
 
+    Examples
+    --------
+    >>> np.random.seed(42)
+    >>> gauss = np.random.randn(100)  # stationary
+    >>> stat = StationarityTester(method='ADF')
+    >>> stat.pvalue(gauss)
+    1.16e-17
+    >>> brown = gauss.cumsum()  # not stationary
+    >>> stat.pvalue(brown)
+    0.60
+    """
     def __init__(self, method='ADF'):
-        self.__class__.__check_method(method)
         self.method = method
 
-    def pvalue(self, x, value='pvalue'):
+    @property
+    def null_hypothesis(self):
+        if method == 'ADF':
+            return 'unit-root'
+        raise ValueError(f'Invalid method: {method}')
+
+    def pvalue(self, x):
         """
-        Return p-value of stationarity test.
+        Return p-value of the stationarity test.
 
         Parameters
         ----------
-        - X : array-like, shape (n_samples, )
+        - x : array-like, shape (n_samples, )
             Time-series to score p-value.
-        - value : {'pvalue', 'statistics', 'all'}, default 'pvalue'
-            'pvalue' : p-value.
-            'statistics' : statistics of unit-root test.
-            'all' : All return values from statsmodels.
 
         Returns
         -------
         pvalue : float
-            p-value of stationarity test.
+            p-value of the stationarity test.
         """
         if self.method == 'ADF':
-            if value == 'pvalue':
-                _, pvalue, _, _, _, _ = adfuller(x)
-                return pvalue
-            if value == 'statistics':
-                statistics, _, _, _, _, _ = adfuller(x)
-                return statistics
-            if value == 'all':
-                return adfuller(x)
-            raise ValueError()
+            _, pvalue, _, _, _, _ = adfuller(x)
+            return pvalue
+        raise ValueError(f'Invalid method: {method}')
 
     def is_stationary(self, x, y=None, pvalue=.05):
         """
-        Return if stationarity test implies stationarity.
+        Return whether stationarity test implies stationarity.
+
+        Note
+        ----
+        The name 'is_stationary' may be misleading.
+        Strictly speaking, `is_stationary = True` implies that the null-hypothesis
+        of the presence of a unit-root has been rejected (ADF test) or the
+        null-hypothesis of the absence of a unit-root has not been rejected (KPSS test).
 
         Returns
         -------
         is_stationary : bool
-            True means that the null hypothes that a unit-root is present
-            has been rejected.
+            True may imply the stationarity.
         """
-        if self.method == 'ADF':
+        if self.null_hypothesis == 'unit-root':
             return self.pvalue(x) < pvalue
+        else:
+            return self.pvalue(x) > pvalue
