@@ -76,10 +76,10 @@ class Fracdiff:
     @property
     def _coeff(self):
         # If coeff has been computed with the same params
-        if hasattr(self, '__coeff') \
+        if hasattr(self, '_cached_coeff') \
                 and self.__order == self.order \
                 and self.__window == self.window:
-            return self.__coeff
+            return self._cached_coeff
 
         def omega(self):
             c = 1.0
@@ -88,7 +88,7 @@ class Fracdiff:
                 c *= (k - self.order) / (k + 1)
 
         coeff = np.flip(np.array(list(omega(self))))
-        self.__coeff = coeff
+        self._cached_coeff = coeff
         self.__order = self.order
         self.__window = self.window
 
