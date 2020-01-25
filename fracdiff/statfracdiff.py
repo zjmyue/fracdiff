@@ -1,3 +1,4 @@
+from sklearn.base import TransformerMixin
 from sklearn.utils.validation import check_array
 import numpy as np
 
