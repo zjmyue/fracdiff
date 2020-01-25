@@ -28,7 +28,6 @@ class StationarityTester:
     def null_hypothesis(self):
         if self.method == 'ADF':
             return 'unit-root'
-        raise ValueError(f'Invalid method: {self.method}')
 
     def pvalue(self, x):
         """
@@ -68,5 +67,3 @@ class StationarityTester:
         """
         if self.null_hypothesis == 'unit-root':
             return self.pvalue(x) < pvalue
-        else:
-            return self.pvalue(x) > pvalue
