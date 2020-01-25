@@ -2,11 +2,15 @@ import matplotlib.pyplot as plt
 import pandas as pd
 from pandas.plotting import register_matplotlib_converters
 import pandas_datareader
-import seaborn
+
+try:
+    import seaborn
+    seaborn.set_style('ticks')
+except ImportError:
+    pass
 
 from fracdiff import Fracdiff, StationaryFracdiff
 
-seaborn.set_style('ticks')
 register_matplotlib_converters()
 
 
