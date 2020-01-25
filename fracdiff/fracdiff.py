@@ -76,11 +76,9 @@ class Fracdiff:
     @property
     def _coeff(self):
         # If coeff has been computed with the same params
-        if (
-                hasattr(self, '__coeff')
-            and self.__order == self.order
-            and self.__window == self.window
-        ):
+        if hasattr(self, '__coeff') \
+                and self.__order == self.order \
+                and self.__window == self.window:
             return self.__coeff
 
         def omega(self):
