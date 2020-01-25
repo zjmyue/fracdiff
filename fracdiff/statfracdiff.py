@@ -62,7 +62,12 @@ class StationaryFracdiff(TransformerMixin):
 
     def transform(self, X, y=None):
         check_array(X)
-        return Fracdiff(self.order_, window=self.window).transform(X)
+        _, n_features = X.shape
+
+        return np.concatenate([
+            Fracdiff(self.order_[i], window=self.window).transform(X[:, [i]])
+            for i in range(n_features)
+        ], axis=1)
 
     def __search_order(self, X):
         """
@@ -75,10 +80,10 @@ class StationaryFracdiff(TransformerMixin):
         """
         _, n_features = X.shape
         if n_features > 1:
-            return np.hstack([
+            return np.concatenate([
                 self.__search_order(X[:, :1]),
                 self.__search_order(X[:, 1:]),
-            ])
+            ], axis=1)
 
         tester = StationarityTester(method=self.stat_method)
 
@@ -99,4 +104,3 @@ class StationaryFracdiff(TransformerMixin):
                 lower = m
 
         return np.array([upper])
-
