@@ -26,9 +26,6 @@ orders_coeffs = [
 ]
 
 
-# --------------------------------------------------------------------------------
-
-
 def make_X(window):
     """
     Returns
@@ -39,6 +36,9 @@ def make_X(window):
     zeros = np.zeros(window)
     delta = np.array([1.0, 0.0, 0.0, 0.0])
     return np.concatenate([zeros, delta], axis=0).reshape(-1, 1)
+
+
+# --------------------------------------------------------------------------------
 
 
 @pytest.mark.parametrize('window', windows)
@@ -66,3 +66,14 @@ def test_coeff_multiple(window, order, coeff):
     coeffs = np.concatenate([coeff, coeff, coeff], axis=1)
 
     assert np.allclose(Xd[window:, :], coeffs)
+
+
+@pytest.mark.parametrize('order, _', orders_coeffs)
+@pytest.mark.parametrize('window', windows)
+def test_cache(order, window, _):
+    fracdiff = Fracdiff(order, window=window)
+
+    coeffs = fracdiff._coeff
+    coeffs_cached = fracdiff._coeff
+
+    assert np.equal(coeffs, coeffs_cached).all()
