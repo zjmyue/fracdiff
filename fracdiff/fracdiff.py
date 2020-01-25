@@ -1,4 +1,3 @@
-from sklearn.base import TransformerMixin
 from sklearn.utils.validation import check_array
 import numpy as np
 
@@ -33,15 +32,23 @@ class Fracdiff:
         self.order = order
         self.window = window
 
-    # TODO make it property
-    @staticmethod
-    def __coeff(order, window):
-        def omega(order, window):
+    @property
+    def _coeff(self):
+        # If coeff has been computed with the same params
+        if hasattr(self, '__coeff') and self.__dict__ == self.__params:
+            return self.__coeff
+
+        def omega(self):
             c = 1.0
-            for k in range(window + 1):
+            for k in range(self.window + 1):
                 yield c
-                c *= (k - order) / (k + 1)
-        return np.array(list(omega(order, window)))[::-1]
+                c *= (k - self.order) / (k + 1)
+
+        coeff = np.flip(np.array(list(omega(self))))
+        self.__coeff = coeff
+        self.__params = self.__dict__
+
+        return coeff
 
     def fit(self, X, y=None):
         return self
@@ -86,8 +93,7 @@ class Fracdiff:
         __max_window = 100  # TODO TBD
         window = self.window if self.window != -1 else __max_window
 
-        coeff = self.__class__.__coeff(self.order, window)
-        d = np.r_[coeff, np.zeros(n_samples - 1)]
+        d = np.r_[self._coeff, np.zeros(n_samples - 1)]
         D_extended = np.vstack([
             np.roll(d, shift) for shift in range(n_samples)
         ])

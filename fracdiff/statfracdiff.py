@@ -1,6 +1,7 @@
 from sklearn.utils.validation import check_array
 import numpy as np
 
+from .fracdiff import Fracdiff
 from ._stat import StationarityTester
 
 
@@ -92,6 +93,7 @@ class StationaryFracdiff:
         return self
 
     def transform(self, X, y=None):
+        check_array(X)
         _, n_features = X.shape
 
         return np.hstack([

@@ -28,7 +28,7 @@ class StationarityTester:
     def null_hypothesis(self):
         if self.method == 'ADF':
             return 'unit-root'
-        raise ValueError(f'Invalid method: {method}')
+        raise ValueError(f'Invalid method: {self.method}')
 
     def pvalue(self, x):
         """
@@ -47,7 +47,7 @@ class StationarityTester:
         if self.method == 'ADF':
             _, pvalue, _, _, _, _ = adfuller(x)
             return pvalue
-        raise ValueError(f'Invalid method: {method}')
+        raise ValueError(f'Invalid method: {self.method}')
 
     def is_stationary(self, x, y=None, pvalue=.05):
         """
@@ -56,9 +56,10 @@ class StationarityTester:
         Note
         ----
         The name 'is_stationary' may be misleading.
-        Strictly speaking, `is_stationary = True` implies that the null-hypothesis
-        of the presence of a unit-root has been rejected (ADF test) or the
-        null-hypothesis of the absence of a unit-root has not been rejected (KPSS test).
+        Strictly speaking, `is_stationary = True` implies that the
+        null-hypothesis of the presence of a unit-root has been rejected
+        (ADF test) or the null-hypothesis of the absence of a unit-root has
+        not been rejected (KPSS test).
 
         Returns
         -------
