@@ -1,40 +1,44 @@
 import pytest
 
-from itertools import product
 import numpy as np
 from fracdiff._stat import StationarityTester
 
 
-@pytest.fixture
-def list_seed():
-    return (42, )
-
-@pytest.fixture
-def list_n_samples():
-    return (100, 1000, 10000, )
+list_seed = [42, ]
+list_n_samples = [100, 1000, 10000]
 
 
-def test_stationary(list_seed, list_n_samples):
-    for seed, n_samples in product(list_seed, list_n_samples):
-        print(seed, n_samples)
-        np.random.seed(seed)
-        gauss = np.random.randn(n_samples)
+def make_stationary(seed, n_samples):
+    np.random.seed(seed)
+    return np.random.randn(n_samples)
 
-        pvalue = StationarityTester().pvalue(gauss)
-        isstat = StationarityTester().is_stationary(gauss)
-
-        assert pvalue < 0.1
-        assert isstat
+def make_nonstationary(seed, n_samples):
+    np.random.seed(seed)
+    return np.random.randn(n_samples).cumsum()
 
 
-def test_nonstationary(list_seed, list_n_samples):
-    for seed, n_samples in product(list_seed, list_n_samples):
-        print(seed, n_samples)
-        np.random.seed(seed)
-        brown = np.random.randn(n_samples).cumsum()
+# --------------------------------------------------------------------------------
 
-        pvalue = StationarityTester().pvalue(brown)
-        isstat = StationarityTester().is_stationary(brown)
 
-        assert pvalue > 0.1
-        assert not isstat
+@pytest.mark.parametrize('seed', list_seed)
+@pytest.mark.parametrize('n_samples', list_n_samples)
+def test_stationary(seed, n_samples):
+    X = make_stationary(seed, n_samples)
+
+    assert StationarityTester().pvalue(X) < 0.1
+    assert StationarityTester().is_stationary(X)
+
+
+@pytest.mark.parametrize('seed', list_seed)
+@pytest.mark.parametrize('n_samples', list_n_samples)
+def test_nonstationary(seed, n_samples):
+    X = make_nonstationary(seed, n_samples)
+
+    assert StationarityTester().pvalue(X) > 0.1
+    assert not StationarityTester().is_stationary(X)
+
+
+def test_invalid_method():
+    with pytest.raises(ValueError):
+        X = make_stationary(42, 1000)
+        StationarityTester(method='hoge').pvalue(X)
