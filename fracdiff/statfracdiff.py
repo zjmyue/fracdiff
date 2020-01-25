@@ -6,7 +6,7 @@ from .fracdiff import Fracdiff
 from ._stat import StationarityTester
 
 
-class StationaryFracdiff:
+class StationaryFracdiff(TransformerMixin):
     """
     Carry out fractional derivative with the minumum order
     with which the differentiation becomes stationary.
