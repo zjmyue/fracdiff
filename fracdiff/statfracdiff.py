@@ -83,7 +83,7 @@ class StationaryFracdiff(TransformerMixin):
             return np.concatenate([
                 self.__search_order(X[:, :1]),
                 self.__search_order(X[:, 1:]),
-            ], axis=1)
+            ], axis=0)
 
         tester = StationarityTester(method=self.stat_method)
 
