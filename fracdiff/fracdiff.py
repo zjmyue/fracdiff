@@ -32,39 +32,6 @@ class Fracdiff:
         self.order = order
         self.window = window
 
-    @property
-    def _coeff(self):
-        # If coeff has been computed with the same params
-        if hasattr(self, '__coeff') and self.__dict__ == self.__params:
-            return self.__coeff
-
-        def omega(self):
-            c = 1.0
-            for k in range(self.window + 1):
-                yield c
-                c *= (k - self.order) / (k + 1)
-
-        coeff = np.flip(np.array(list(omega(self))))
-        self.__coeff = coeff
-        self.__params = self.__dict__
-
-        return coeff
-
-    def fit(self, X, y=None):
-        return self
-
-    def __check_order(self):
-        """Check if the value of order is sane"""
-        if not (isinstance(self.order, float) or isinstance(self.order, int)):
-            raise TypeError('order must be int or float.')
-
-    def __check_window(self):
-        """Check if the value of window is sane"""
-        if not isinstance(self.window, int):
-            raise TypeError('window must be int.')
-        if not (self.window == -1 or self.window > 0):
-            raise ValueError('window must be -1 or positive integer.')
-
     def transform(self, X):
         """
         Perform fractional differentiation on array.
@@ -105,3 +72,33 @@ class Fracdiff:
             X_d[:window] = np.nan
 
         return X_d
+
+    @property
+    def _coeff(self):
+        # If coeff has been computed with the same params
+        if hasattr(self, '__coeff') and self.__dict__ == self.__params:
+            return self.__coeff
+
+        def omega(self):
+            c = 1.0
+            for k in range(self.window + 1):
+                yield c
+                c *= (k - self.order) / (k + 1)
+
+        coeff = np.flip(np.array(list(omega(self))))
+        self.__coeff = coeff
+        self.__params = self.__dict__
+
+        return coeff
+
+    def __check_order(self):
+        """Check if the value of order is sane"""
+        if not (isinstance(self.order, float) or isinstance(self.order, int)):
+            raise ValueError('order must be int or float.')
+
+    def __check_window(self):
+        """Check if the value of window is sane"""
+        if not isinstance(self.window, int):
+            raise ValueError('window must be int.')
+        if not (self.window == -1 or self.window > 0):
+            raise ValueError('window must be -1 or positive integer.')
