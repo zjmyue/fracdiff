@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "fracdiff"
-version = "0.0.3"
+version = "0.0.4"
 description = "Fractional differentiation of time-series."
 homepage = "https://github.com/simaki/fracdiff"
 repository = "https://github.com/simaki/fracdiff"
