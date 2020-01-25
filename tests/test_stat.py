@@ -36,9 +36,3 @@ def test_nonstationary(seed, n_samples):
 
     assert StationarityTester().pvalue(X) > 0.1
     assert not StationarityTester().is_stationary(X)
-
-
-def test_invalid_method():
-    with pytest.raises(ValueError):
-        X = make_stationary(42, 1000)
-        StationarityTester(method='hoge').pvalue(X)
