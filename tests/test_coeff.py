@@ -44,7 +44,25 @@ def make_X(window):
 @pytest.mark.parametrize('window', windows)
 @pytest.mark.parametrize('order, coeff', orders_coeffs)
 def test_coeff(window, order, coeff):
+    """
+    Test the correctness of coefficients.
+    """
     X = make_X(window)
     Xd = Fracdiff(order, window=window).transform(X)
 
     assert np.allclose(Xd[window:, :], coeff)
+
+
+@pytest.mark.parametrize('window', windows)
+@pytest.mark.parametrize('order, coeff', orders_coeffs)
+def test_coeff_multiple(window, order, coeff):
+    """
+    Test fracdiff of array with n_features > 1.
+    """
+    window = 100
+    X = np.concatenate([make_X(window), make_X(window), make_X(window)], axis=1)
+    Xd = Fracdiff(order, window=window).transform(X)
+
+    coeffs = np.concatenate([coeff, coeff, coeff], axis=1)
+
+    assert np.allclose(Xd[window:, :], coeffs)
