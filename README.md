@@ -2,6 +2,7 @@
 
 [![version](https://img.shields.io/pypi/v/fracdiff.svg)](https://pypi.org/project/fracdiff/)
 [![Build Status](https://travis-ci.com/simaki/fracdiff.svg?branch=master)](https://travis-ci.com/simaki/fracdiff)
+[![codecov](https://codecov.io/gh/simaki/fracdiff/branch/master/graph/badge.svg)](https://codecov.io/gh/simaki/fracdiff)
 [![LICENSE](https://img.shields.io/github/license/simaki/fracdiff)](LICENSE)
 
 Fractional differentiation of time-series.
