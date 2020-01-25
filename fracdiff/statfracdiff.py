@@ -19,6 +19,10 @@ class StationaryFracdiff(TransformerMixin):
         P-value to judge stationarity.
     - precision : float, default .01
         Precision for the order of differentiation.
+    - upper : float, default 1.0
+        Upper limit of the range to search the order.
+    - lower : float, default 0.0
+        Lower limit of the range to search the order.
     - window : positive int or -1, default 10
         Window to compute differentiation.
         If -1, ...
@@ -28,8 +32,6 @@ class StationaryFracdiff(TransformerMixin):
     - order_ : array-like, shape (n_features, )
         Minimum order of fractional differentiation
         that makes time-series stationary.
-    - fracdiff_ : Fracdiff
-        Fracdiff object with `order_`.
 
     Note
     ----
@@ -53,6 +55,14 @@ class StationaryFracdiff(TransformerMixin):
         self.upper = upper
         self.lower = lower
         self.window = window
+
+    def fit(self, X, y=None):
+        self.order_ = self.__search_order(X)
+        return self
+
+    def transform(self, X, y=None):
+        check_array(X)
+        return Fracdiff(self.order_, window=self.window).transform(X)
 
     def __search_order(self, X):
         """
@@ -87,20 +97,6 @@ class StationaryFracdiff(TransformerMixin):
                 upper = m
             else:
                 lower = m
+
         return np.array([upper])
 
-    def fit(self, X, y=None):
-        self.order_ = self.__search_order(X)
-        return self
-
-    def transform(self, X, y=None):
-        check_array(X)
-        _, n_features = X.shape
-
-        return np.hstack([
-            (
-                Fracdiff(self.order_[i], window=self.window)
-                .transform(X[:, i].reshape(-1, 1))
-            )
-            for i in range(n_features)
-        ])
