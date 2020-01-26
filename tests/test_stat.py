@@ -4,7 +4,7 @@ import numpy as np
 from fracdiff._stat import StationarityTester
 
 
-list_seed = [42, ]
+list_seed = [42, 1, 2, 3]
 list_n_samples = [100, 1000, 10000]
 
 
