@@ -22,7 +22,7 @@ $ pip install fracdiff
 
 ## What is fractional differentiation?
 
-See [M. L. Prado's book][prado].
+See [M. L. Prado, "Advances in Financial Machine Learning"][prado].
 
 ## How to use
 
@@ -36,7 +36,7 @@ from fracdiff import Fracdiff
 
 spx = ...  # Fetch 1d array of S&P 500 historical price
 
-fracdiff = FracDiff(0.5)
+fracdiff = Fracdiff(0.5)
 spx_diff = fracdiff.transform(spx)
 ```
 
@@ -77,9 +77,9 @@ The result looks like this:
 
 ![nky](./sample/howto/nky.png)
 
-Other examples including those in [M. L. Prado's book][prado] are proveided [here](sample/examples/examples.ipynb).
+Other examples are provided [here](sample/examples/examples.ipynb).
 
-Example solutions of exercises in Section 5 of M. L. Prado's book are provided [here](sample/examples/exercise/excersise.ipynb).
+Example solutions of exercises in Section 5 of "Advances in Financial Machine Learning" are provided [here](sample/exercise/exercise.ipynb).
 
 ## References
 
