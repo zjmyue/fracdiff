@@ -136,7 +136,9 @@ class Fracdiff:
             np.roll(d, shift - self.window + 1)
             for shift in range(self.window + n_samples - 1)
         ], axis=0)
-        X_extended = np.concatenate([np.zeros((self.window - 1, 1)), X], axis=0)
+        X_extended = np.concatenate([
+            np.zeros((self.window - 1, 1)), X
+        ], axis=0)
 
         Xd = (D @ X_extended)[-n_samples:, :]
         Xd[:self.window - 1, :] = np.nan
@@ -150,14 +152,19 @@ class Fracdiff:
         # TODO Simplify logic
         determine_window = (
             self.window is None
-            or getattr(self, '_cached_order', self.order) != self.order
-            or getattr(self, '_cached_tol_memory', self.tol_memory) != self.tol_memory
-            or getattr(self, '_cached_tol_coef', self.tol_coef) != self.tol_coef
+            or getattr(self, '_cached_order', self.order)
+            != self.order
+            or getattr(self, '_cached_tol_memory', self.tol_memory)
+            != self.tol_memory
+            or getattr(self, '_cached_tol_coef', self.tol_coef)
+            != self.tol_coef
         )
         determine_coef = (
             not hasattr(self, 'coef')
-            or getattr(self, '_cached_order', self.order) != self.order
-            or getattr(self, '_cached_window', self.window) != self.window
+            or getattr(self, '_cached_order', self.order)
+            != self.order
+            or getattr(self, '_cached_window', self.window)
+            != self.window
         )
         if not (determine_window or determine_coef):
             return
