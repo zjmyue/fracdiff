@@ -12,6 +12,7 @@ def make_stationary(seed, n_samples):
     np.random.seed(seed)
     return np.random.randn(n_samples)
 
+
 def make_nonstationary(seed, n_samples):
     np.random.seed(seed)
     return np.random.randn(n_samples).cumsum()

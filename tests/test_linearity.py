@@ -1,6 +1,5 @@
 import pytest
 
-from itertools import product
 import numpy as np
 from fracdiff import Fracdiff
 
