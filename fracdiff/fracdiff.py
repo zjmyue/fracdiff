@@ -18,13 +18,13 @@ class Fracdiff:
         That is, `window` is chosen as the minimum integer that makes the
         absolute value of the sum of fracdiff coefficients from `window + 1`th
         term is smaller than `tol_memory`.
-        If `width_window` is specified, ignored.
+        If `window` is specified, ignored.
     - tol_coef : float in [0, 1] or None, default None
         Tolerance of memory loss to determine `window`.
         That is, `window` is chosen as the minimum integer that makes the
         absolute value of `window + 1`th fracdiff coefficient is smaller
         than `tol_memory`.
-        If `width_window` is specified, ignored.
+        If `window` is specified, ignored.
     - window_policy : {'fixed', 'expanding'}, default 'fixed'
         If fixed :
             Each term in fracdiff time-series will be evaluated using
