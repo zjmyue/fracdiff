@@ -26,6 +26,8 @@ See [M. L. Prado, "Advances in Financial Machine Learning"][prado].
 
 ## How to use
 
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/simaki/fracdiff/blob/master/sample/howto/howto.ipynb)
+
 ### Fractional differentiation
 
 A transformer class `Fracdiff` performs fractional differentiation by its method `transform`.
