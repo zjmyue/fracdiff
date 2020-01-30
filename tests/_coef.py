@@ -15,6 +15,7 @@ def get_coefs(d, n_terms):
     """
     Compute coefficients of fracdiff operator explicitly (but inefficiently)
     and return the sequence of them as `numpy.array`.
+
     Parameters
     ----------
     - d : float
