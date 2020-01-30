@@ -107,18 +107,16 @@ class Fracdiff:
         """
         Set `self.window` and `self.coef`.
         """
-        # If parameters have been changed, reset window
-        if self.d < 0.0:
-            raise ValueError('d should be positive.')
-
+        # If parameters have been changed, recompute coef
         if (
             getattr(self, '_d', self.d) != self.d
+            or getattr(self, '_window', self.window) != self.window
             or getattr(self, '_tol_memory', self.tol_memory) != self.tol_memory
             or getattr(self, '_tol_coef', self.tol_coef) != self.tol_coef
         ):
-            self.window = None
+            delattr(self, 'coef')
 
-        if self.window is None or not hasattr(self, 'coef'):
+        if not hasattr(self, 'coef'):
             self.coef = self._get_coef()
             self._d = self.d
             self._tol_memory = self.tol_memory
@@ -136,6 +134,14 @@ class Fracdiff:
         The k-th coefficient (k = 0, 1, 2, ...) is given by ::
             ((-1) ** k) * poch_down(d, k) / k!
         """
+        # Check parameters
+        if self.d < 0.0:
+            raise ValueError('d must be positive.')
+        if self.tol_memory is not None and self.tol_memory <= 0.0:
+            raise ValueError('tol_memory must be positive.')
+        if self.tol_coef is not None and self.tol_coef <= 0.0:
+            raise ValueError('tol_coef must be positive.')
+
         # Compute
         n_terms = self.window or self.MAX_WINDOW
         k = np.arange(n_terms, dtype=np.float64)
