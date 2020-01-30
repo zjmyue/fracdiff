@@ -6,7 +6,7 @@ from fracdiff import Fracdiff
 
 
 params_window = [4]
-params_d = [0.5] #list(np.linspace(0.0, 2.0, 21))
+params_d = list(np.linspace(0.0, 2.0, 21))
 params_n_series = [1]
 params_n_terms = [4]
 
@@ -52,11 +52,8 @@ def test_coef(d, window, n_terms, n_series):
     """
     # TODO shift the position of 1
     X = make_X(window, n_terms, n_series)
-    print(X.shape)
     Xd = Fracdiff(d, window=window).transform(X)
     coefs_expected = get_coefs(d, n_terms)
-
-    fracdiff = Fracdiff(d, window=window)._fit()
 
     for i in range(n_series):
         assert np.allclose(Xd[window:, i], coefs_expected)
