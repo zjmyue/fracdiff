@@ -137,10 +137,12 @@ class Fracdiff:
         # Check parameters
         if self.d < 0.0:
             raise ValueError('d must be positive.')
-        if self.tol_memory is not None and self.tol_memory <= 0.0:
-            raise ValueError('tol_memory must be positive.')
-        if self.tol_coef is not None and self.tol_coef <= 0.0:
-            raise ValueError('tol_coef must be positive.')
+        if self.tol_memory is not None:
+            if not 0.0 < self.tol_memory < 1.0:
+                raise ValueError('tol_memory must be in (0.0, 1.0).')
+        if self.tol_coef is not None:
+            if not 0.0 < self.tol_coef < 1.0:
+                raise ValueError('tol_coef must be in (0.0, 1.0).')
 
         # Compute
         n_terms = self.window or self.MAX_WINDOW
