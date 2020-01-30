@@ -1,71 +1,62 @@
 import pytest
+from ._coef import get_coefs
 
 import numpy as np
 from fracdiff import Fracdiff
 
 
-list_window = [4, 10, 100, 1000]
-list_n_features = [1, 5]
-
-# order of differentiation and corresponding coefficients
-_dict_coef = {
-    0.0: [1.0, 0.0, 0.0, 0.0],
-    1.0: [1.0, -1.0, 0.0, 0.0],
-    1.0 / 2.0: [1.0, -1.0 / 2.0, -1.0 / 8.0, -1.0 / 16.0],
-    1.0 / 3.0: [1.0, -1.0 / 3.0, -1.0 / 9.0, -5.0 / 81.0],
-    1.0 / 4.0: [1.0, -1.0 / 4.0, -3.0 / 32.0, -7.0 / 128.0],
-    1.0 / 5.0: [1.0, -1.0 / 5.0, -2.0 / 25.0, -6.0 / 125.0],
-    1.0 / 6.0: [1.0, -1.0 / 6.0, -5.0 / 72.0, -55.0 / 1296.0],
-    1.0 / 7.0: [1.0, -1.0 / 7.0, -3.0 / 49.0, -13.0 / 343.0],
-    1.0 / 8.0: [1.0, -1.0 / 8.0, -7.0 / 128.0, -35.0 / 1024.0],
-    1.0 / 9.0: [1.0, -1.0 / 9.0, -4.0 / 81.0, -68.0 / 2187.0],
-}
-
-orders_coefs = [
-    (order, np.array(coef))
-    for order, coef in _dict_coef.items()
-]
+params_window = [4]
+params_d = [0.5] #list(np.linspace(0.0, 2.0, 21))
+params_n_series = [1]
+params_n_terms = [4]
 
 
-def make_X(window, n_features):
+def make_X(window, n_terms, n_series):
     """
     Returns
     -------
-    np.array([[0.0  0.0  ...  0.0  1.0  0.0  0.0  0.0]])
-               <------- window ------>
+    np.array([
+        [0.0  0.0  ...  0.0  1.0  0.0  ...  0.0] |
+        [0.0  0.0  ...  0.0  1.0  0.0  ...  0.0] | n_series
+        [0.0  0.0  ...  0.0  1.0  0.0  ...  0.0] |
+    ])
+         <---- window ---->  <---- n_terms ---->
     """
-    x = np.concatenate([
-        np.zeros(window - 1),
-        np.array([1]),
-        np.zeros(3),
+    return np.concatenate([
+        np.zeros((window, n_series)),
+        np.ones((1, n_series)),
+        np.zeros((n_terms - 1, n_series)),
     ], axis=0)
-
-    return np.stack([x for _ in range(n_features)], axis=1)
 
 
 # --------------------------------------------------------------------------------
 
 
-@pytest.mark.parametrize('window', list_window)
-@pytest.mark.parametrize('n_features', list_n_features)
-@pytest.mark.parametrize('order, coef', orders_coefs)
-def test_coef(window, order, coef, n_features):
+@pytest.mark.parametrize('d', params_d)
+@pytest.mark.parametrize('window', params_window)
+@pytest.mark.parametrize('n_terms', params_n_terms)
+def test_coef_attr(d, window, n_terms):
+    coef = Fracdiff(d, window=window)._fit().coef
+    coef_expected = get_coefs(d, n_terms)
+
+    assert np.allclose(coef, coef_expected)
+
+
+@pytest.mark.parametrize('d', params_d)
+@pytest.mark.parametrize('window', params_window)
+@pytest.mark.parametrize('n_terms', params_n_terms)
+@pytest.mark.parametrize('n_series', params_n_series)
+def test_coef(d, window, n_terms, n_series):
     """
     Test the correctness of coefficients.
     """
-    X = make_X(window, n_features)
-    Xd = Fracdiff(order, window=window).transform(X)
+    # TODO shift the position of 1
+    X = make_X(window, n_terms, n_series)
+    print(X.shape)
+    Xd = Fracdiff(d, window=window).transform(X)
+    coefs_expected = get_coefs(d, n_terms)
 
-    for i in range(n_features):
-        assert np.allclose(Xd[-4:, i], coef)
+    fracdiff = Fracdiff(d, window=window)._fit()
 
-
-# @pytest.mark.parametrize('order, _', orders_coefs)
-# @pytest.mark.parametrize('window', windows)
-# def test_cache(order, window, _):
-#     fracdiff = Fracdiff(order, window=window)
-
-#     coefs = fracdiff.coef
-#     coefs_cached = fracdiff.coef
-
-#     assert np.equal(coefs, coefs_cached).all()
+    for i in range(n_series):
+        assert np.allclose(Xd[window:, i], coefs_expected)
