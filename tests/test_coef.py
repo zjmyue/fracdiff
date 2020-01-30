@@ -5,10 +5,10 @@ import numpy as np
 from fracdiff import Fracdiff
 
 
-params_window = [4]
-params_d = list(np.linspace(0.0, 2.0, 21))
-params_n_series = [1]
-params_n_terms = [4]
+params_window = [10]
+params_d = list(np.linspace(0.0, 3.0, 31))
+params_n_series = [1, 3]
+params_n_terms = [10]
 
 
 def make_X(window, n_terms, n_series):
