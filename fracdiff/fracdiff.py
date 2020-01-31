@@ -184,6 +184,6 @@ class Fracdiff:
             Array of coefficients of fracdiff.
         """
         if d >= 1.0:
-            return np.diff(Fracdiff._compute_coef(d - 1.0, n_terms), prepend=0.0)
+            return np.diff(Fracdiff._compute_coef(d - 1, n_terms), prepend=0)
         s = np.tile([1.0, -1.0], -(-n_terms // 2))[:n_terms]
         return s * binom(d, np.arange(n_terms))
