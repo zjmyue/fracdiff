@@ -4,13 +4,12 @@ from math import floor
 import numpy as np
 from fracdiff import Fracdiff
 
-# params_d = list(np.linspace(1.0, 2.0, 10))
-params_d = list(np.linspace(0.0, 1.0, 10))
+params_d = list(np.linspace(0.0, 5.0, 50))
 params_tol_memory = [0.5]
 params_tol_coef = [0.5]
 params_parameter = ['d', 'window', 'tol_memory', 'tol_coef']
 
-LARGE_NUMBER = 2 ** 20
+LARGE_NUMBER = 2 ** 12
 X = np.zeros((LARGE_NUMBER, 2))
 
 
@@ -51,12 +50,3 @@ def test_tol_coef(d, tol_coef):
         if d > 1:
             d -= floor(d)
         assert abs(last_coef(d, window)) < abs(tol_coef)
-
-
-# @pytest.mark.parametrize('d', params_d)
-# def test_reset_d(d):
-#     fracdiff = Fracdiff(0.42)
-#     fracdiff.transform(X)
-
-#     fracdiff.d = d
-#     fracdiff.transform(X)
