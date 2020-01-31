@@ -66,66 +66,66 @@ def test_coef(d, window, n_blanks_1, n_blanks_2, n_terms, n_series):
         assert np.allclose(coef, coef_expected)
 
 
-# @pytest.mark.parametrize('d', params_d)
-# @pytest.mark.parametrize('window', [10])
-# @pytest.mark.parametrize('n_blanks_1', [0])
-# @pytest.mark.parametrize('n_blanks_2', [0])
-# @pytest.mark.parametrize('n_terms', [10])
-# @pytest.mark.parametrize('n_series', [3])
-# def test_transform_twice(d, window, n_blanks_1, n_blanks_2, n_terms, n_series):
-#     """
-#     Test the correctness of coefficients.
-#     """
-#     X = make_X(window, n_blanks_1, n_blanks_2, n_terms, n_series)
+@pytest.mark.parametrize('d', params_d)
+@pytest.mark.parametrize('window', [10])
+@pytest.mark.parametrize('n_blanks_1', [0])
+@pytest.mark.parametrize('n_blanks_2', [0])
+@pytest.mark.parametrize('n_terms', [10])
+@pytest.mark.parametrize('n_series', [3])
+def test_transform_twice(d, window, n_blanks_1, n_blanks_2, n_terms, n_series):
+    """
+    Test the correctness of coefficients.
+    """
+    X = make_X(window, n_blanks_1, n_blanks_2, n_terms, n_series)
 
-#     fracdiff = Fracdiff(d, window=window)
-#     Xd1 = fracdiff.transform(X)
-#     Xd2 = fracdiff.transform(X)
+    fracdiff = Fracdiff(d, window=window)
+    Xd1 = fracdiff.transform(X)
+    Xd2 = fracdiff.transform(X)
 
-#     assert np.allclose(Xd1, Xd2, equal_nan=True)
-
-
-# @pytest.mark.parametrize('d', params_d)
-# @pytest.mark.parametrize('window', [10])
-# @pytest.mark.parametrize('n_blanks_1', [0])
-# @pytest.mark.parametrize('n_blanks_2', [0])
-# @pytest.mark.parametrize('n_terms', [10])
-# @pytest.mark.parametrize('n_series', [3])
-# def test_change_d(d, window, n_blanks_1, n_blanks_2, n_terms, n_series):
-#     """
-#     Test the correctness of coefficients.
-#     """
-#     X = make_X(window, n_blanks_1, n_blanks_2, n_terms, n_series)
-
-#     fracdiff = Fracdiff(0.42, window=window)
-#     _ = fracdiff.transform(X)
-
-#     fracdiff.d = d
-
-#     Xd = fracdiff.transform(X)
-#     Xd_expected = Fracdiff(d, window=window).transform(X)
-
-#     assert np.allclose(Xd, Xd_expected, equal_nan=True)
+    assert np.allclose(Xd1, Xd2, equal_nan=True)
 
 
-# @pytest.mark.parametrize('d', params_d)
-# @pytest.mark.parametrize('window', [10])
-# @pytest.mark.parametrize('n_blanks_1', [0])
-# @pytest.mark.parametrize('n_blanks_2', [0])
-# @pytest.mark.parametrize('n_terms', [10])
-# @pytest.mark.parametrize('n_series', [3])
-# def test_change_window(d, window, n_blanks_1, n_blanks_2, n_terms, n_series):
-#     """
-#     Test the correctness of coefficients.
-#     """
-#     X = make_X(window, n_blanks_1, n_blanks_2, n_terms, n_series)
+@pytest.mark.parametrize('d', params_d)
+@pytest.mark.parametrize('window', [10])
+@pytest.mark.parametrize('n_blanks_1', [0])
+@pytest.mark.parametrize('n_blanks_2', [0])
+@pytest.mark.parametrize('n_terms', [10])
+@pytest.mark.parametrize('n_series', [3])
+def test_change_d(d, window, n_blanks_1, n_blanks_2, n_terms, n_series):
+    """
+    Test the correctness of coefficients.
+    """
+    X = make_X(window, n_blanks_1, n_blanks_2, n_terms, n_series)
 
-#     fracdiff = Fracdiff(d, window=1)
-#     _ = fracdiff.transform(X)
+    fracdiff = Fracdiff(0.42, window=window)
+    _ = fracdiff.transform(X)
 
-#     fracdiff.window = window
+    fracdiff.d = d
 
-#     Xd = fracdiff.transform(X)
-#     Xd_expected = Fracdiff(d, window=window).transform(X)
+    Xd = fracdiff.transform(X)
+    Xd_expected = Fracdiff(d, window=window).transform(X)
 
-#     assert np.allclose(Xd, Xd_expected, equal_nan=True)
+    assert np.allclose(Xd, Xd_expected, equal_nan=True)
+
+
+@pytest.mark.parametrize('d', params_d)
+@pytest.mark.parametrize('window', [10])
+@pytest.mark.parametrize('n_blanks_1', [0])
+@pytest.mark.parametrize('n_blanks_2', [0])
+@pytest.mark.parametrize('n_terms', [10])
+@pytest.mark.parametrize('n_series', [3])
+def test_change_window(d, window, n_blanks_1, n_blanks_2, n_terms, n_series):
+    """
+    Test the correctness of coefficients.
+    """
+    X = make_X(window, n_blanks_1, n_blanks_2, n_terms, n_series)
+
+    fracdiff = Fracdiff(d, window=1)
+    _ = fracdiff.transform(X)
+
+    fracdiff.window = window
+
+    Xd = fracdiff.transform(X)
+    Xd_expected = Fracdiff(d, window=window).transform(X)
+
+    assert np.allclose(Xd, Xd_expected, equal_nan=True)

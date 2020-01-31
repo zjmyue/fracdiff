@@ -5,7 +5,7 @@ import numpy as np
 from fracdiff import Fracdiff
 
 
-params_d = list(np.linspace(0.0, 3.0, 50))
+params_d = list(np.linspace(0.0, 3.0, 100))
 params_window = [10]
 params_n_terms = [10]
 
