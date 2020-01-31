@@ -12,7 +12,7 @@ params_invalid_tol_memory = [0.0, -1.0, 2.0]
 params_invalid_tol_coef = [0.0, -1.0, 2.0]
 params_invalid_method = ['foo']
 
-X = np.random.randn(100, 2)
+X = np.zeros((20, 2))
 
 
 # --------------------------------------------------------------------------------
@@ -54,3 +54,18 @@ def test_fracdiff_tol_coef(tol_coef):
 def test_stat_method(method):
     with pytest.raises(ValueError):
         StationarityTester(method=method).pvalue(X)
+
+
+def test_saturation():
+    small_tolerance = 2 ** (-20)
+    fracdiff = Fracdiff(0.5, window=None, tol_memory=small_tolerance)
+
+    with pytest.raises(RuntimeWarning):
+        fracdiff.transform(X)
+
+
+def test_small_n_samples():
+    fracdiff = Fracdiff(window=100)
+
+    with pytest.raises(ValueError):
+        fracdiff.transform(np.zeros((10, 2)))
