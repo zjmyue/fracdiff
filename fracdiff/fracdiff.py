@@ -1,6 +1,6 @@
 from functools import partial
-
 from bisect import bisect
+
 import numpy as np
 from sklearn.utils.validation import check_array
 from scipy.special import binom
@@ -17,13 +17,13 @@ class Fracdiff:
     - window : int > 0 or None, default 10
         Minimum number of observations to evaluate each term in fracdiff.
         If None, it will be determined according to `tol_memory` or `tol_coef`.
-    - tol_memory : float in [0, 1] or None, default None
+    - tol_memory : float in (0, 1) or None, default None
         Tolerance of memory loss to determine `window`.
         That is, `window` is chosen as the minimum integer that makes the
         absolute value of the sum of fracdiff coefficients from `window + 1`th
         term is smaller than `tol_memory`.
         If `window` is specified, ignored.
-    - tol_coef : float in [0, 1] or None, default None
+    - tol_coef : float in (0, 1) or None, default None
         Tolerance of memory loss to determine `window`.
         That is, `window` is chosen as the minimum integer that makes the
         absolute value of `window + 1`th fracdiff coefficient is smaller
@@ -46,8 +46,17 @@ class Fracdiff:
 
     Attributes
     ----------
-    - coef : array, shape (window, )
+    - window_ : int
+        Minimum number of observations to evaluate each term in fracdiff.
+        If `window` is specified, it is set to it.
+        If `window` is None, it will be determined based on `tol_memory`
+        and/or `tol_coef`.
+    - coef_ : array, shape (window, )
         Sequence of coefficients in fracdiff operator.
+
+    Notes
+    -----
+    window will become extremely large for small tol bla bla bla.
 
     Examples
     --------
@@ -68,7 +77,6 @@ class Fracdiff:
         tol_coef=None,
         window_policy='fixed',
     ):
-        """Initialize self."""
         self.d = d
         self.window = window
         self.tol_memory = tol_memory
@@ -95,7 +103,7 @@ class Fracdiff:
         self._fit()
         n_samples, n_series = X.shape
 
-        D = partial(np.convolve, self.coef, mode='valid')
+        D = partial(np.convolve, self.coef_, mode='valid')
         Xd = np.apply_along_axis(D, 0, X)
 
         nans = np.full((n_samples - Xd.shape[0], n_series), np.nan)
@@ -106,37 +114,41 @@ class Fracdiff:
     def _fit(self):
         """
         Set `self.window` and `self.coef`.
-        """
-        # If parameters have been changed, recompute coef
-        if (
-            getattr(self, '_d', self.d) != self.d
-            or getattr(self, '_window', self.window) != self.window
-            or getattr(self, '_tol_memory', self.tol_memory) != self.tol_memory
-            or getattr(self, '_tol_coef', self.tol_coef) != self.tol_coef
-        ):
-            delattr(self, 'coef')
 
-        if not hasattr(self, 'coef'):
-            self.coef = self._get_coef()
+        Returns
+        -------
+        self
+        """
+        self._check_params()
+
+        # If parameters have been changed, reset attributes
+        if (
+            self.d != getattr(self, '_d', self.d) or
+            self.window != getattr(self, '_window', self.window) or
+            self.tol_memory != getattr(self, '_tol_memory', self.tol_memory) or
+            self.tol_coef != getattr(self, '_tol_coef', self.tol_coef)
+        ):
+            delattr(self, 'window_')
+            delattr(self, 'coef_')
+
+        if not hasattr(self, 'coef_'):
+            self.coef_ = self._get_coef()
+            self.window_ = self.coef_.size
+
+            # Cache parameters with which attributes were computed
             self._d = self.d
+            self._window = self.window
             self._tol_memory = self.tol_memory
             self._tol_coef = self.tol_coef
-            self._window = self.window
 
         return self
 
-    def _get_coef(self):
-        """
-        Return array of coefficients.
-
-        Note
-        ----
-        The k-th coefficient (k = 0, 1, 2, ...) is given by ::
-            ((-1) ** k) * poch_down(d, k) / k!
-        """
-        # Check parameters
+    def _check_params(self):
         if self.d < 0.0:
             raise ValueError('d must be positive.')
+        if self.window is not None:
+            if self.window < 1:
+                raise ValueError('window must be positive.')
         if self.tol_memory is not None:
             if not 0.0 < self.tol_memory < 1.0:
                 raise ValueError('tol_memory must be in (0.0, 1.0).')
@@ -144,28 +156,34 @@ class Fracdiff:
             if not 0.0 < self.tol_coef < 1.0:
                 raise ValueError('tol_coef must be in (0.0, 1.0).')
 
-        # Compute
-        n_terms = self.window or self.MAX_WINDOW
-        k = np.arange(n_terms, dtype=np.float64)
-        s = np.tile([1.0, -1.0], -(-n_terms // 2))[:n_terms]
-        coef = s * binom(self.d, k)
+    def _get_coef(self):
+        coef = self._compute_coef(self.d, self.window or self.MAX_WINDOW)
 
-        # Truncate
         if self.window is None:
             if self.tol_memory is None and self.tol_coef is None:
                 raise ValueError(
                     'None of window, tol_coef and tol_memory are specified.'
                 )
-            # FIXME works only for 0 < d < 1
-            lost_memory = 1.0 - np.cumsum(self.coef)
-            window = max(
-                bisect(-lost_memory, -self.tol_memory or np.inf),
-                bisect(-self.coef, -self.tol_coef or np.inf),
+            window = min(
+                bisect(-np.cumsum(coef), -self.tol_memory or np.inf),
+                bisect(-coef, -self.tol_coef or np.inf),
             )
-            self.window = window
-            coef = coef[:self.window]
+        else:
+            window = self.window
 
-        if self.window < 1:
-            raise ValueError('window should be positive.')
+        return coef[:window]
 
-        return coef
+    @staticmethod
+    def _compute_coef(d, n_terms):
+        """
+        Return array of coefficients.
+
+        Returns
+        -------
+        coef : array, shape (n_terms, )
+            Array of coefficients of fracdiff.
+        """
+        if d >= 1.0:
+            return np.diff(Fracdiff._compute_coef(d - 1.0, n_terms), prepend=0.0)
+        s = np.tile([1.0, -1.0], -(-n_terms // 2))[:n_terms]
+        return s * binom(d, np.arange(n_terms))
