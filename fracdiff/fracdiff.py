@@ -60,7 +60,8 @@ class Fracdiff:
 
     Notes
     -----
-    window will become extremely large for small tol bla bla bla.
+    Notice that the window for small d or tolerance can become extremely large.
+    For instance, window grows by the order of `tol_coef ** (-1 / d)`.
 
     Examples
     --------
@@ -95,6 +96,7 @@ class Fracdiff:
         ----------
         - X : array-like, shape (n_samples, n_series)
             Time-series to perform fractional differentiation.
+            Raises ValueError if `n_samples < self.window_`.
 
         Returns
         -------
