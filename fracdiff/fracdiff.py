@@ -1,3 +1,4 @@
+from copy import copy
 from functools import partial
 from bisect import bisect
 
@@ -113,7 +114,7 @@ class Fracdiff:
 
     def _fit(self):
         """
-        Set `self.window` and `self.coef`.
+        Set `self.window_` and `self.coef_`.
 
         Returns
         -------
@@ -133,7 +134,8 @@ class Fracdiff:
 
         if not hasattr(self, 'coef_'):
             self.coef_ = self._get_coef()
-            self.window_ = self.coef_.size
+            self.window_ = self._get_window()
+            self.coef_ = self.coef_[:self.window_]
 
             # Cache parameters with which attributes were computed
             self._d = self.d
@@ -146,35 +148,25 @@ class Fracdiff:
     def _check_params(self):
         if self.d < 0.0:
             raise ValueError('d must be positive.')
+
         if self.window is not None:
             if self.window < 1:
                 raise ValueError('window must be positive.')
+
         if self.tol_memory is not None:
             if not 0.0 < self.tol_memory < 1.0:
                 raise ValueError('tol_memory must be in (0.0, 1.0).')
+
         if self.tol_coef is not None:
             if not 0.0 < self.tol_coef < 1.0:
                 raise ValueError('tol_coef must be in (0.0, 1.0).')
 
-    def _get_coef(self):
-        coef = self._compute_coef(self.d, self.window or self.MAX_WINDOW)
-
-        if self.window is None:
-            if self.tol_memory is None and self.tol_coef is None:
-                raise ValueError(
-                    'None of window, tol_coef and tol_memory are specified.'
-                )
-            window = min(
-                bisect(-np.cumsum(coef), -self.tol_memory or np.inf),
-                bisect(-coef, -self.tol_coef or np.inf),
+        if not any([self.window, self.tol_memory, self.tol_coef]):
+            raise ValueError(
+                'None of window, tol_coef and tol_memory are specified.'
             )
-        else:
-            window = self.window
 
-        return coef[:window]
-
-    @staticmethod
-    def _compute_coef(d, n_terms):
+    def _get_coef(self):
         """
         Return array of coefficients.
 
@@ -183,7 +175,29 @@ class Fracdiff:
         coef : array, shape (n_terms, )
             Array of coefficients of fracdiff.
         """
-        if d >= 1.0:
-            return np.diff(Fracdiff._compute_coef(d - 1, n_terms), prepend=0)
+        if self.d >= 1.0:
+            self_copy = copy(self)
+            self_copy.d = self.d - 1
+            return np.diff(self_copy._get_coef(), prepend=0.0)
+
+        n_terms = self.window or self.MAX_WINDOW
         s = np.tile([1.0, -1.0], -(-n_terms // 2))[:n_terms]
-        return s * binom(d, np.arange(n_terms))
+
+        return s * binom(self.d, np.arange(n_terms))
+
+    def _get_window(self):
+        if self.window:
+            return self.window
+
+        if self.d.is_integer():
+            return int(self.d) + 1
+
+        if self.d > 1:
+            self_copy = copy(self)
+            self_copy.d = self.d - 1
+            return self_copy._get_window()
+
+        return max(
+            bisect(-np.cumsum(self.coef_), -(self.tol_memory or np.inf)) + 1,
+            bisect(-np.abs(self.coef_), -(self.tol_coef or np.inf)) + 1,
+        )
