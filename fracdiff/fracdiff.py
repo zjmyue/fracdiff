@@ -136,7 +136,7 @@ class Fracdiff:
             delattr(self, 'window_')
             delattr(self, 'coef_')
 
-        if not hasattr(self, 'coef_'):
+        if not (hasattr(self, 'coef_') and hasattr(self, 'window_')):
             self.coef_ = self._get_coef()
             self.window_ = self._get_window()
             self.coef_ = self.coef_[:self.window_]
@@ -203,7 +203,7 @@ class Fracdiff:
             return int(self.d) + 1
 
         if self.d > 1:
-            return self._descendant._get_window()
+            return self._descendant._fit().window_
 
         window = max(
             bisect(-np.cumsum(self.coef_), -(self.tol_memory or np.inf)) + 1,
