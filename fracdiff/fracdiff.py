@@ -44,6 +44,9 @@ class Fracdiff:
             `window` observations.
             The beginning `window - 1` terms in fracdiff time-series will be
             filled with `numpy.nan`.
+    - max_window : int, default 2 ** 12
+        Maximum value of window when determining it from `tol_memory`
+        and/or `tol_coef`.
 
     Attributes
     ----------
@@ -68,8 +71,6 @@ class Fracdiff:
     >>> fracdiff.coef
     ...
     """
-    MAX_WINDOW = 2 ** 20  # upper limit of `self.window`.
-
     def __init__(
         self,
         d=1.0,
@@ -77,12 +78,14 @@ class Fracdiff:
         tol_memory=None,
         tol_coef=None,
         window_policy='fixed',
+        max_window=2 ** 12,
     ):
         self.d = d
         self.window = window
         self.tol_memory = tol_memory
         self.tol_coef = tol_coef
         self.window_policy = window_policy
+        self.max_window = max_window
 
     def transform(self, X):
         """
@@ -100,8 +103,9 @@ class Fracdiff:
             The beginning `self.window - 1` terms will be filled with
             `numpy.nan`.
         """
-        X = check_array(X, estimator=self)
         self._fit()
+
+        X = check_array(X, estimator=self)
         n_samples, n_series = X.shape
 
         D = partial(np.convolve, self.coef_, mode='valid')
@@ -176,16 +180,22 @@ class Fracdiff:
             Array of coefficients of fracdiff.
         """
         if self.d >= 1.0:
-            self_copy = copy(self)
-            self_copy.d = self.d - 1
-            return np.diff(self_copy._get_coef(), prepend=0.0)
+            return np.diff(self._descendant._get_coef(), prepend=0.0)
 
-        n_terms = self.window or self.MAX_WINDOW
+        n_terms = self.window or self.max_window
         s = np.tile([1.0, -1.0], -(-n_terms // 2))[:n_terms]
 
         return s * binom(self.d, np.arange(n_terms))
 
     def _get_window(self):
+        """
+        Return window determined by `self.window`, `self.tol_memory`,
+        and `self.tol_coef`.
+
+        Returns
+        -------
+        window : int
+        """
         if self.window:
             return self.window
 
@@ -193,11 +203,28 @@ class Fracdiff:
             return int(self.d) + 1
 
         if self.d > 1:
-            self_copy = copy(self)
-            self_copy.d = self.d - 1
-            return self_copy._get_window()
+            return self._descendant._get_window()
 
-        return max(
+        window = max(
             bisect(-np.cumsum(self.coef_), -(self.tol_memory or np.inf)) + 1,
             bisect(-np.abs(self.coef_), -(self.tol_coef or np.inf)) + 1,
         )
+        if self.window == self.max_window:
+            raise RuntimeWarning(
+                f'window saturated with max_window = {self.max_window}.'
+            )
+        return window
+
+    @property
+    def _descendant(self):
+        """
+        Return `Fracdiff` with `d` one smaller than self.
+        Used to evaluate `coef_` and `window_` of Fracdiff with d > 1.
+
+        Returns
+        -------
+        descendant : Fracdiff
+        """
+        descendant = copy(self)
+        descendant.d = self.d - 1.0
+        return descendant
