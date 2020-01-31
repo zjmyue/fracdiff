@@ -105,7 +105,7 @@ class Fracdiff:
         """
         self._fit()
 
-        X = check_array(X, estimator=self)
+        X = check_array(X, estimator=self, ensure_min_samples=self.window_)
         n_samples, n_series = X.shape
 
         D = partial(np.convolve, self.coef_, mode='valid')
@@ -209,7 +209,7 @@ class Fracdiff:
             bisect(-np.cumsum(self.coef_), -(self.tol_memory or np.inf)) + 1,
             bisect(-np.abs(self.coef_), -(self.tol_coef or np.inf)) + 1,
         )
-        if self.window == self.max_window:
+        if window >= self.max_window:
             raise RuntimeWarning(
                 f'window saturated with max_window = {self.max_window}.'
             )
