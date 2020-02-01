@@ -1,6 +1,6 @@
+from bisect import bisect
 from copy import copy
 from functools import partial
-from bisect import bisect
 
 import numpy as np
 from sklearn.utils.validation import check_array
@@ -9,68 +9,82 @@ from scipy.special import binom
 
 class Fracdiff:
     """
-    Carry out fractional differentiation.
+    Fractional differentiation of time-series.
 
     Parameters
     ----------
     - d : float, default 1.0
         Order of differentiation.
     - window : int > 0 or None, default 10
-        Minimum number of observations to evaluate each term in fracdiff.
-        If None, it will be determined according to `tol_memory` or `tol_coef`.
-    - tol_memory : float in (0, 1) or None, default None
-        Tolerance of memory loss to determine `window`.
-        That is, `window` is chosen as the minimum integer that makes the
-        absolute value of the sum of fracdiff coefficients from `window + 1`th
+        Minimum number of observations to compute each term in fracdiff
+        time-series.
+        If specified, `window_` will be set to this value.
+        If None, `window_` is determined based on `tol_memory` and `tol_coef`.
+    - tol_memory : float in (0.0, 1.0) or None, default None
+        Tolerance of memory loss which determines `window_`.
+        That is, `window_` is chosen as the minimum integer that makes the
+        absolute value of the sum of fracdiff coefficients from `window_ + 1`th
         term is smaller than `tol_memory`.
         If `window` is specified, ignored.
-    - tol_coef : float in (0, 1) or None, default None
-        Tolerance of memory loss to determine `window`.
-        That is, `window` is chosen as the minimum integer that makes the
-        absolute value of `window + 1`th fracdiff coefficient is smaller
-        than `tol_memory`.
+    - tol_coef : float in (0.0, 1.0) or None, default None
+        Tolerance of coefficient smallness which determines `window_`.
+        That is, `window_` is chosen as the minimum integer that makes the
+        absolute value of the `window`th fracdiff coefficient is smaller than
+        `tol_coef`.
         If `window` is specified, ignored.
     - window_policy : {'fixed'}, default 'fixed'
-        If fixed :
-            Each term in fracdiff time-series will be evaluated using
-            `window` observations.
+        If `fixed` :
+            Each term in fracdiff time-series is evaluated using `window_`
+            observations.
             In other words, in a fracdiff operator as a polynominal of a
-            backshift operator, the sequence of coefficient will always be
-            truncated up to the `window`th term.
-            The beginning `window - 1` terms in fracdiff time-series will be
+            backshift operator, the sequence of coefficient is always truncated
+            up to the `window_`th term.
+            The beginning `window_ - 1` terms in fracdiff time-series will be
             filled with `numpy.nan`.
-        If expanding (not available yet) :
-            Each term in fracdiff time-series will be evaluated using at least
+        If `expanding` (not available yet) :
+            Each term in fracdiff time-series is evaluated using at least
             `window` observations.
             The beginning `window - 1` terms in fracdiff time-series will be
             filled with `numpy.nan`.
     - max_window : int, default 2 ** 12
-        Maximum value of window when determining it from `tol_memory`
-        and/or `tol_coef`.
+        Maximum value of `window_` when determining it from `tol_memory` and
+        `tol_coef`.
 
     Attributes
     ----------
     - window_ : int
         Minimum number of observations to evaluate each term in fracdiff.
-        If `window` is specified, it is set to it.
-        If `window` is None, it will be determined based on `tol_memory`
-        and/or `tol_coef`.
     - coef_ : array, shape (window, )
         Sequence of coefficients in fracdiff operator.
 
     Notes
     -----
-    Notice that the window for small d or tolerance can become extremely large.
+    The window for small d or tolerance can become extremely large.
     For instance, window grows by the order of `tol_coef ** (-1 / d)`.
 
     Examples
     --------
-    >>> fracdiff = Fracdiff(0.5)
-    >>> X = ...
-    >>> fracdiff.transform(X)
-    ...
-    >>> fracdiff.coef
-    ...
+    >>> X = np.array([[0.],
+    ...               [0.],
+    ...               [0.],
+    ...               [0.],
+    ...               [1.],
+    ...               [0.],
+    ...               [0.],
+    ...               [0.]])
+    >>> fracdiff = Fracdiff(0.5, window=4)
+    >>> Xd = fracdiff.transform(X)
+    >>> Xd
+    array([[    nan],
+           [    nan],
+           [    nan],
+           [    nan],
+           [ 1.    ],
+           [-0.5   ],
+           [-0.125 ],
+           [-0.0625]])
+    >>> fracdiff.coef_
+    array([ 1.    , -0.5   , -0.125 , -0.0625])
     """
     def __init__(
         self,
@@ -90,7 +104,7 @@ class Fracdiff:
 
     def transform(self, X):
         """
-        Return fractional differentiation of array.
+        Return fractional differentiation of X.
 
         Parameters
         ----------
@@ -102,12 +116,11 @@ class Fracdiff:
         -------
         - X_d : array, shape (n_samples, n_series)
             Fractionally differentiated time-series.
-            The beginning `self.window - 1` terms will be filled with
-            `numpy.nan`.
+            The beginning `window_ - 1` terms will be filled with `numpy.nan`.
         """
         self._fit()
 
-        X = check_array(X, estimator=self, ensure_min_samples=self.window_)
+        X = check_array(X, ensure_min_samples=self.window_, estimator=self)
         n_samples, n_series = X.shape
 
         D = partial(np.convolve, self.coef_, mode='valid')
@@ -152,19 +165,19 @@ class Fracdiff:
         return self
 
     def _check_params(self):
-        if self.d < 0.0:
-            raise ValueError('d must be positive.')
+        if self.d < 0:
+            raise ValueError('d must be non-negative.')
 
         if self.window is not None:
             if self.window < 1:
                 raise ValueError('window must be positive.')
 
         if self.tol_memory is not None:
-            if not 0.0 < self.tol_memory < 1.0:
+            if not 0 < self.tol_memory < 1:
                 raise ValueError('tol_memory must be in (0.0, 1.0).')
 
         if self.tol_coef is not None:
-            if not 0.0 < self.tol_coef < 1.0:
+            if not 0 < self.tol_coef < 1:
                 raise ValueError('tol_coef must be in (0.0, 1.0).')
 
         if not any([self.window, self.tol_memory, self.tol_coef]):
@@ -181,8 +194,8 @@ class Fracdiff:
         coef : array, shape (n_terms, )
             Array of coefficients of fracdiff.
         """
-        if self.d >= 1.0:
-            return np.diff(self._descendant._get_coef(), prepend=0.0)
+        if self.d >= 1:
+            return np.diff(self._descendant._get_coef(), prepend=0)
 
         n_terms = self.window or self.max_window
         s = np.tile([1.0, -1.0], -(-n_terms // 2))[:n_terms]
@@ -191,7 +204,7 @@ class Fracdiff:
 
     def _get_window(self):
         """
-        Return window determined by `self.window`, `self.tol_memory`,
+        Return window determined based on `self.window`, `self.tol_memory`,
         and `self.tol_coef`.
 
         Returns
@@ -205,6 +218,7 @@ class Fracdiff:
             return int(self.d) + 1
 
         if self.d > 1:
+            # It cannot be just self._get_window() as it assumes coef_ is set
             return self._descendant._fit().window_
 
         window = max(
@@ -228,5 +242,5 @@ class Fracdiff:
         descendant : Fracdiff
         """
         descendant = copy(self)
-        descendant.d = self.d - 1.0
+        descendant.d = self.d - 1
         return descendant
