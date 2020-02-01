@@ -1,4 +1,3 @@
-from bisect import bisect
 from copy import copy
 from functools import partial
 
@@ -221,9 +220,11 @@ class Fracdiff:
             # It cannot be just self._get_window() as it assumes coef_ is set
             return self._descendant._fit().window_
 
+        tol_memory = self.tol_memory or np.inf
+        tol_coef = self.tol_coef or np.inf
         window = max(
-            bisect(-np.cumsum(self.coef_), -(self.tol_memory or np.inf)) + 1,
-            bisect(-np.abs(self.coef_), -(self.tol_coef or np.inf)) + 1,
+            np.searchsorted(-np.cumsum(self.coef_), -tol_memory) + 1,
+            np.searchsorted(-np.abs(self.coef_), -tol_coef) + 1,
         )
         if window >= self.max_window:
             raise RuntimeWarning(
