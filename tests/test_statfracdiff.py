@@ -5,10 +5,11 @@ import numpy as np
 from fracdiff._stat import StationarityTester
 from fracdiff import Fracdiff, StationaryFracdiff
 
-list_seed = [42]
-list_n_samples = [500, 1000]
-list_window = [10, 100]
-list_precision = [0.01, 0.001]
+params_seed = [42]
+params_n_samples = [500, 1000]
+params_n_features = [1, 3]
+params_window = [10, 100]
+params_precision = [0.01, 0.001]
 
 
 def make_stationary(seed, n_samples, n_features):
@@ -28,55 +29,36 @@ def is_stat(x):
 # --------------------------------------------------------------------------------
 
 
-@pytest.mark.parametrize('seed', list_seed)
-@pytest.mark.parametrize('n_samples', list_n_samples)
-@pytest.mark.parametrize('window', list_window)
-@pytest.mark.parametrize('precision', list_precision)
-def test_order(seed, n_samples, window, precision):
-    """
-    Test if `StationaryFracdiff.order_` is the lowest order to make the
-    differentiation stationary.
-    """
-    X = make_nonstationary(seed, n_samples, 1)
-
-    statfracdiff = StationaryFracdiff(window=window, precision=precision).fit(X)
-    order = statfracdiff.order_
-
-    Xd_stat = statfracdiff.transform(X)[window:, :]
-    Xd_nonstat = Fracdiff(order[0] - precision, window).transform(X)[window:, :]
-
-    assert is_stat(Xd_stat[:, 0])
-    assert not is_stat(Xd_nonstat[:, 0])
-
-
-@pytest.mark.parametrize('seed', list_seed)
-@pytest.mark.parametrize('n_samples', list_n_samples)
-@pytest.mark.parametrize('window', list_window)
-@pytest.mark.parametrize('precision', list_precision)
-def test_order_multiple(seed, n_samples, window, precision):
+@pytest.mark.parametrize('seed', params_seed)
+@pytest.mark.parametrize('n_samples', params_n_samples)
+@pytest.mark.parametrize('n_features', params_n_features)
+@pytest.mark.parametrize('window', params_window)
+@pytest.mark.parametrize('precision', params_precision)
+def test_order(seed, n_samples, n_features, window, precision):
     """
     Test if `StationaryFracdiff.order_` is the lowest order to make the
     differentiation stationary for array with `n_features > 1`.
     """
-    X = make_nonstationary(seed, n_samples, 3)
+    X = make_nonstationary(seed, n_samples, n_features)
 
-    statfracdiff = StationaryFracdiff(window=window, precision=precision).fit(X)
+    statfracdiff = StationaryFracdiff(window=window, precision=precision)
+    statfracdiff.fit(X)
     order = statfracdiff.order_
 
     Xd_stat = statfracdiff.transform(X)[window:, :]
     Xd_nonstat = np.concatenate([
         Fracdiff(order[i] - precision, window).transform(X[:, [i]])[window:, :]
-        for i in range(3)
+        for i in range(n_features)
     ], axis=1)
 
-    for i in range(3):
+    for i in range(n_features):
         assert is_stat(Xd_stat[:, i])
         assert not is_stat(Xd_nonstat[:, i])
 
 
-@pytest.mark.parametrize('seed', list_seed)
-@pytest.mark.parametrize('n_samples', list_n_samples)
-@pytest.mark.parametrize('window', list_window)
+@pytest.mark.parametrize('seed', params_seed)
+@pytest.mark.parametrize('n_samples', params_n_samples)
+@pytest.mark.parametrize('window', params_window)
 def test_lower_is_stat(seed, n_samples, window):
     """
     Test if `StationarityFracdiff.fit` returns `lower`
@@ -89,9 +71,9 @@ def test_lower_is_stat(seed, n_samples, window):
     assert order == 0.0
 
 
-@pytest.mark.parametrize('seed', list_seed)
-@pytest.mark.parametrize('n_samples', list_n_samples)
-@pytest.mark.parametrize('window', list_window)
+@pytest.mark.parametrize('seed', params_seed)
+@pytest.mark.parametrize('n_samples', params_n_samples)
+@pytest.mark.parametrize('window', params_window)
 def test_upper_is_not_stat(seed, n_samples, window):
     """
     Test if `StationarityFracdiff.fit` returns `np.nan`
@@ -104,34 +86,16 @@ def test_upper_is_not_stat(seed, n_samples, window):
     assert np.isnan(order)
 
 
-@pytest.mark.parametrize('seed', list_seed)
-@pytest.mark.parametrize('n_samples', list_n_samples)
-@pytest.mark.parametrize('window', list_window)
-def test_transform(seed, n_samples, window):
-    """
-    Test if `StationaryFracdiff.transform` works.
-    """
-    X = make_nonstationary(seed, n_samples, 1)
-    statfracdiff = StationaryFracdiff(window=window)
-
-    order = statfracdiff.fit(X).order_[0]
-    fracdiff = Fracdiff(order=order, window=window)
-
-    Xd = statfracdiff.transform(X)
-    Xd_expected = fracdiff.transform(X)
-
-    assert np.allclose(Xd, Xd_expected, equal_nan=True)
-
-
-@pytest.mark.parametrize('seed', list_seed)
-@pytest.mark.parametrize('n_samples', list_n_samples)
-@pytest.mark.parametrize('window', list_window)
-def test_transform_multiple(seed, n_samples, window):
+@pytest.mark.parametrize('seed', params_seed)
+@pytest.mark.parametrize('n_samples', params_n_samples)
+@pytest.mark.parametrize('n_features', params_n_features)
+@pytest.mark.parametrize('window', params_window)
+def test_transform(seed, n_samples, n_features, window):
     """
     Test if `StationaryFracdiff.transform` works
     for array with n_features > 1.
     """
-    X = make_nonstationary(seed, n_samples, 3)
+    X = make_nonstationary(seed, n_samples, n_features)
 
     statfracdiff = StationaryFracdiff(window=window).fit(X)
     order = statfracdiff.order_
@@ -139,7 +103,7 @@ def test_transform_multiple(seed, n_samples, window):
     Xd = statfracdiff.transform(X)[window:, :]
     Xd_expected = np.concatenate([
         Fracdiff(order[i], window).transform(X[:, [i]])[window:, :]
-        for i in range(3)
+        for i in range(n_features)
     ], axis=1)
 
     assert np.allclose(Xd, Xd_expected, equal_nan=True)
