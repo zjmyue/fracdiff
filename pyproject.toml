@@ -8,19 +8,19 @@ authors = ["Shota Imaki <shota.imaki@icloud.com>"]
 license = "BSD-3-Clause"
 
 [tool.poetry.dependencies]
-python = ">=3.6"
-numpy = ">=1.18"
-scikit-learn = ">=0.22.1"
-scipy = ">=1.4.1"
-statsmodels = ">=0.10.2"
+python = ">=3.6.1"
+numpy = "^1.18"
+scikit-learn = ">=0.22"
+scipy = "^1.4.1"
+statsmodels = ">=0.10"
 
 [tool.poetry.dev-dependencies]
-pytest = ">=5.3"
-pytest-cov = ">=2.8"
-codecov = ">=2.0"
-flake8 = ">=3.7"
-matplotlib = ">=3.1"
-pandas = ">=1.0.1"
+pytest = "^5.3"
+pytest-cov = "^2.8"
+codecov = "^2.0"
+flake8 = "^3.7"
+matplotlib = "^3.1"
+pandas = "^1.0.1"
 pandas_datareader = ">=0.8"
 
 [build-system]
