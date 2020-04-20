@@ -35,7 +35,7 @@ class StationarityTester:
 
         Parameters
         ----------
-        - x : array-like, shape (n_samples, )
+        - x : array, shape (n_samples, )
             Time-series to score p-value.
 
         Returns
